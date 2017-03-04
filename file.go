@@ -7,7 +7,11 @@ import (
 	"os"
 )
 
-func WriteFile(fileName string, data string) (bool, error) {
+func WriteString(fileName string, data string) (bool, error) {
+	return WriteBytes(fileName, []byte(data))
+}
+
+func WriteBytes(fileName string, data []byte) (bool, error) {
 	var err error
 
 	_, err = os.Stat(fileName)
@@ -22,8 +26,16 @@ func WriteFile(fileName string, data string) (bool, error) {
 			log.WithFields(log.Fields{"error": err, "fileName": fileName}).Error("unable to read file")
 			return false, err
 		}
-		if string(fileBytes) == data {
-			return false, nil
+		if len(fileBytes) == len(data) {
+			fullEqual := true
+			for i := 0; i < len(data); i++ {
+				if fileBytes[i] != data[i] {
+					fullEqual = false
+				}
+			}
+			if fullEqual {
+				return false, nil
+			}
 		}
 	}
 
@@ -34,7 +46,7 @@ func WriteFile(fileName string, data string) (bool, error) {
 		return false, err
 	}
 
-	_, err = f.WriteString(data)
+	_, err = f.Write(data)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err, "tempFileName": tempFileName}).Error("unable to write to temporary file")
 		return false, err
